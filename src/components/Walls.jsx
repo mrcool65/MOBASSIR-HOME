@@ -2,11 +2,9 @@ import React from 'react'
 import {
   EXTERIOR_WALLS,
   FLOOR_PLAN,
-  BALCONY_ROOM_EXTERIOR_WALLS,
   getDoorOpening,
   getWindowOpening
 } from '../utils/floorPlanData'
-
 
 function WallSegment({
   startX,
@@ -21,13 +19,11 @@ function WallSegment({
 }) {
   const dx = endX - startX
   const dz = endZ - startZ
-
   const length = Math.hypot(dx, dz)
 
   if (length <= 0.001) return null
 
   const angle = Math.atan2(dz, dx)
-
   const pieces = []
 
   const makeMesh = (
@@ -49,11 +45,7 @@ function WallSegment({
       receiveShadow
     >
       <boxGeometry
-        args={[
-          sizeAlong,
-          sizeY,
-          thickness
-        ]}
+        args={[sizeAlong, sizeY, thickness]}
       />
 
       <meshStandardMaterial
@@ -63,11 +55,6 @@ function WallSegment({
       />
     </mesh>
   )
-
-
-  // ==========================================================
-  // NO OPENING
-  // ==========================================================
 
   if (!opening) {
     return makeMesh(
@@ -79,11 +66,6 @@ function WallSegment({
     )
   }
 
-
-  // ==========================================================
-  // OPENING
-  // ==========================================================
-
   const start = Math.max(
     0,
     Math.min(length, opening.openingStart)
@@ -93,9 +75,6 @@ function WallSegment({
     start,
     Math.min(length, opening.openingEnd)
   )
-
-
-  // Left/start section
 
   if (start > 0.01) {
     pieces.push(
@@ -109,9 +88,6 @@ function WallSegment({
     )
   }
 
-
-  // Right/end section
-
   if (end < length - 0.01) {
     pieces.push(
       makeMesh(
@@ -124,17 +100,8 @@ function WallSegment({
     )
   }
 
-
-  const openingSize = Math.max(
-    0,
-    end - start
-  )
-
-  const openingCenter =
-    (start + end) / 2
-
-
-  // Bottom section for windows
+  const openingSize = Math.max(0, end - start)
+  const openingCenter = (start + end) / 2
 
   if (
     opening.openingBottom > 0.01 &&
@@ -151,9 +118,6 @@ function WallSegment({
     )
   }
 
-
-  // Top section
-
   if (
     opening.openingTop < height - 0.01 &&
     openingSize > 0.01
@@ -166,205 +130,110 @@ function WallSegment({
         'top',
         openingCenter,
         openingSize,
-        opening.openingTop +
-          topHeight / 2,
+        opening.openingTop + topHeight / 2,
         topHeight
       )
     )
   }
 
-
   return pieces
 }
 
-
-// ============================================================
-// FIND DOOR / WINDOW OPENING
-// ============================================================
-
 function findOpening(wall) {
   const horizontal =
-    Math.abs(
-      wall.startZ - wall.endZ
-    ) < 0.001
+    Math.abs(wall.startZ - wall.endZ) < 0.001
 
   const vertical =
-    Math.abs(
-      wall.startX - wall.endX
-    ) < 0.001
+    Math.abs(wall.startX - wall.endX) < 0.001
 
-
-  // ==========================================================
-  // DOORS
-  // ==========================================================
-
-  for (
-    const door of Object.values(FLOOR_PLAN.doors)
-  ) {
-
+  for (const door of Object.values(FLOOR_PLAN.doors)) {
     if (
       horizontal &&
       door.wallOrientation === 'horizontal' &&
-      Math.abs(
-        wall.startZ - door.wallZ
-      ) < 0.001 &&
+      Math.abs(wall.startZ - door.wallZ) < 0.001 &&
       door.center.x >=
-        Math.min(
-          wall.startX,
-          wall.endX
-        ) &&
+        Math.min(wall.startX, wall.endX) &&
       door.center.x <=
-        Math.max(
-          wall.startX,
-          wall.endX
-        )
+        Math.max(wall.startX, wall.endX)
     ) {
       return getDoorOpening(door)
     }
-
 
     if (
       vertical &&
       door.wallOrientation === 'vertical' &&
-      Math.abs(
-        wall.startX - door.wallX
-      ) < 0.001 &&
+      Math.abs(wall.startX - door.wallX) < 0.001 &&
       door.center.z >=
-        Math.min(
-          wall.startZ,
-          wall.endZ
-        ) &&
+        Math.min(wall.startZ, wall.endZ) &&
       door.center.z <=
-        Math.max(
-          wall.startZ,
-          wall.endZ
-        )
+        Math.max(wall.startZ, wall.endZ)
     ) {
       return getDoorOpening(door)
     }
   }
 
-
-  // ==========================================================
-  // WINDOWS
-  // ==========================================================
-
   for (
-    const windowData of Object.values(
-      FLOOR_PLAN.windows
-    )
+    const windowData of Object.values(FLOOR_PLAN.windows)
   ) {
-
     if (
       horizontal &&
-      windowData.wallOrientation ===
-        'horizontal' &&
+      windowData.wallOrientation === 'horizontal' &&
       Math.abs(
-        wall.startZ -
-          windowData.wallZ
+        wall.startZ - windowData.wallZ
       ) < 0.001 &&
       windowData.center.x >=
-        Math.min(
-          wall.startX,
-          wall.endX
-        ) &&
+        Math.min(wall.startX, wall.endX) &&
       windowData.center.x <=
-        Math.max(
-          wall.startX,
-          wall.endX
-        )
+        Math.max(wall.startX, wall.endX)
     ) {
-      return getWindowOpening(
-        windowData
-      )
+      return getWindowOpening(windowData)
     }
-
 
     if (
       vertical &&
-      windowData.wallOrientation ===
-        'vertical' &&
+      windowData.wallOrientation === 'vertical' &&
       Math.abs(
-        wall.startX -
-          windowData.wallX
+        wall.startX - windowData.wallX
       ) < 0.001 &&
       windowData.center.z >=
-        Math.min(
-          wall.startZ,
-          wall.endZ
-        ) &&
+        Math.min(wall.startZ, wall.endZ) &&
       windowData.center.z <=
-        Math.max(
-          wall.startZ,
-          wall.endZ
-        )
+        Math.max(wall.startZ, wall.endZ)
     ) {
-      return getWindowOpening(
-        windowData
-      )
+      return getWindowOpening(windowData)
     }
   }
-
 
   return null
 }
 
-
-// ============================================================
-// WALLS
-// ============================================================
-
 function Walls() {
-
   const {
     house,
     interiorWalls,
     balconyWalls
   } = FLOOR_PLAN
 
-
-  // Main house walls
-
   const allWalls = [
     ...EXTERIOR_WALLS,
-
     ...interiorWalls,
-
-    ...balconyWalls,
-
-    // ========================================================
-    // IMPORTANT:
-    // Balcony Room walls are added here.
-    // ========================================================
-    ...(FLOOR_PLAN.balconyRoomWalls || []),
-
-    ...BALCONY_ROOM_EXTERIOR_WALLS
+    ...balconyWalls
   ]
-
 
   return (
     <group>
-
-      {allWalls.map(
-        (wall, index) => (
-
-          <WallSegment
-            key={`wall-${index}`}
-            {...wall}
-            opening={findOpening(wall)}
-            height={house.height}
-            thickness={
-              house.wallThickness
-            }
-            id={`wall-${index}`}
-          />
-
-        )
-      )}
-
+      {allWalls.map((wall, index) => (
+        <WallSegment
+          key={`wall-${index}`}
+          {...wall}
+          opening={findOpening(wall)}
+          height={house.height}
+          thickness={house.wallThickness}
+          id={`wall-${index}`}
+        />
+      ))}
     </group>
   )
 }
-
 
 export default Walls
